@@ -14,7 +14,8 @@ def osm_connector(**kwargs):
     Return the geolocation for the given address.
 
     Search for location in OpenStreetMap. Location can either be given as
-    country=..., region=...(optional), sub_region=...(optional)
+    country=..., region=...(optional), sub_region=...(optional),
+    city=...(optional)
     or
     address=(...)
 
@@ -30,6 +31,7 @@ def osm_connector(**kwargs):
     country : string
     region : string
     sub_region : string
+    city : string
 
     or
 
@@ -46,8 +48,8 @@ def osm_connector(**kwargs):
         if 'sub_region' in kwargs.keys():
             assert 'region' in kwargs.keys(), "If sub_region is given, " \
                 "region needs to be given as well"
-        if 'address' in kwargs.keys():
-            assert 'sub_region' in kwargs.keys(), "If address is given, " \
+        if 'city' in kwargs.keys():
+            assert 'sub_region' in kwargs.keys(), "If city is given, " \
                 "sub_region needs to be given as well"
     else:
         assert 'address' in kwargs.keys(), "No valid parameter given: " \
@@ -59,11 +61,12 @@ def osm_connector(**kwargs):
     if 'address' in kwargs.keys():
         addr = f"q={kwargs['address']}"
     else:
-        kw = ['country', 'region', 'sub_region']
+        kw = ['country', 'region', 'sub_region', 'city']
         kw_map = {
             'country': 'country',
             'region': 'state',
-            'sub_region': 'county'
+            'sub_region': 'county',
+            'city': 'city'
             }
 
         addr = "&".join([f"{kw_map[k]}={kwargs[k]}"
@@ -102,7 +105,8 @@ def osm_geolocation(**kwargs):
     Return the geolocation for the given address.
 
     Search for location in OpenStreetMap. Location can either be given as
-    country=..., region=...(optional), sub_region=...(optional)
+    country=..., region=...(optional), sub_region=...(optional),
+    city=...(optional)
     or
     address=(...)
 
@@ -118,6 +122,7 @@ def osm_geolocation(**kwargs):
     country : string
     region : string
     sub_region : string
+    city : string
 
     or
 
@@ -141,7 +146,8 @@ def osm_apply(row):
     Parameters
     ----------
     row : named tuple
-        Row of a dataset containing columns country, region, and sub_region.
+        Row of a dataset containing columns country, region, sub_region,
+        and city.
 
     Returns
     -------
@@ -151,16 +157,22 @@ def osm_apply(row):
 
     """
     try:
-        if ~pd.isna(row.sub_region):
+        if ~pd.isna(row.city):
             gl = osm_geolocation(country=row.country, region=row.region,
-                                 sub_country=row.sub_region)
+                                 sub_region=row.sub_region, city=row.city)
+        elif ~pd.isna(row.sub_region):
+            gl = osm_geolocation(country=row.country, region=row.region,
+                                 sub_region=row.sub_region)
         elif ~pd.isna(row.region):
             gl = osm_geolocation(country=row.country, region=row.region)
         else:
             gl = osm_geolocation(country=row.country)
     except IndexError:
         try:
-            if ~pd.isna(row.sub_region):
+            if ~pd.isna(row.city):
+                addr = (f"{row.city},{row.sub_region},{row.region},"
+                        f"{row.country}")
+            elif ~pd.isna(row.sub_region):
                 addr = f"{row.sub_region},{row.region},{row.country}"
             elif ~pd.isna(row.region):
                 addr = f"{row.region},{row.country}"
