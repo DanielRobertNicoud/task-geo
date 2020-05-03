@@ -1,7 +1,7 @@
 name: Run Nightly
 on:
   schedule:
-    - cron: '0 1 * * *' # run at midnight
+    - cron: '54 * * * *' # run at midnight
       branches:
         include: [master]
 
