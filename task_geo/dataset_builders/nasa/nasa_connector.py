@@ -44,6 +44,55 @@ def nasa_data_loc(lat, lon, str_start_date, str_end_date, parms_str):
     df['lat'] = lat
     return df
 
+def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
+    """
+    Extract data for an area. The area is at most 10x10 degrees, the output is
+    at 1/2 degrees coordinates.
+
+    Parameters
+    ----------
+    bbox : list
+        [min lat, min lon, max lat, max lon], half-degrees
+        max 10x10 degrees
+    str_start_date : string
+    str_end_date : string
+    parms_list : list
+
+    Returns
+    -------
+    df : pandas.DataFrame
+
+    """
+    base_url = "https://power.larc.nasa.gov/cgi-bin/v1/DataAccess.py"
+
+    identifier = "identifier=Regional"
+    parms_str = f"parameters={','.join(parms_list)}"
+    user_community = "userCommunity=SSE"
+    temporal_average = "tempAverage=DAILY"
+    output_format = "outputList=JSON"
+    user = "user=anonymous"
+
+    url = (
+        f"{base_url}?request=execute&{identifier}&{parms_str}&"
+        f"startDate={str_start_date}&endDate={str_end_date}&"
+        f"bbox={str(bbox)[1:-1].replace(' ', '')}&{temporal_average}&{output_format}&"
+        f"{user_community}&{user}"
+    )
+    
+    response = requests.get(url).json()
+    data_json = requests.get(response['outputs']['json']).json()
+    data = [
+        pd.DataFrame({
+            **{par: data_coord['properties']['parameter'][par]
+            for par in parms_list},
+            'lat': data_coord['geometry']['coordinates'][0],
+            'lon': data_coord['geometry']['coordinates'][1]
+        }) for data_coord in data_json['features']
+    ]
+    df = pd.concat(data)
+    df.reset_index(inplace=True, drop=False)
+    return df.rename(columns={'index': 'date'})
+
 
 def nasa_connector(df_locations, start_date, end_date=None, parms=None):
     """Retrieve meteorologic data from NASA.
