@@ -75,7 +75,8 @@ def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
     url = (
         f"{base_url}?request=execute&{identifier}&{parms_str}&"
         f"startDate={str_start_date}&endDate={str_end_date}&"
-        f"bbox={str(bbox)[1:-1].replace(' ', '')}&{temporal_average}&{output_format}&"
+        f"bbox={str(bbox)[1:-1].replace(' ', '')}&"
+        f"{temporal_average}&{output_format}&"
         f"{user_community}&{user}"
     )
     
