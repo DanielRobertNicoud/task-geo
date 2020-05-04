@@ -88,7 +88,7 @@ def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
                          for par in parms_list},
                       'lat': data_coord['geometry']['coordinates'][0],
                       'lon': data_coord['geometry']['coordinates'][1]
-        }) for data_coord in data_json['features']
+                      }) for data_coord in data_json['features']
     ]
     df = pd.concat(data)
     df.reset_index(inplace=True, drop=False)
