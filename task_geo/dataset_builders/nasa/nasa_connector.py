@@ -44,6 +44,7 @@ def nasa_data_loc(lat, lon, str_start_date, str_end_date, parms_str):
     df['lat'] = lat
     return df
 
+
 def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
     """
     Extract data for an area. The area is at most 10x10 degrees, the output is
@@ -79,15 +80,14 @@ def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
         f"{temporal_average}&{output_format}&"
         f"{user_community}&{user}"
     )
-    
+
     response = requests.get(url).json()
     data_json = requests.get(response['outputs']['json']).json()
     data = [
-        pd.DataFrame({
-            **{par: data_coord['properties']['parameter'][par]
-            for par in parms_list},
-            'lat': data_coord['geometry']['coordinates'][0],
-            'lon': data_coord['geometry']['coordinates'][1]
+        pd.DataFrame({**{par: data_coord['properties']['parameter'][par]
+                         for par in parms_list},
+                      'lat': data_coord['geometry']['coordinates'][0],
+                      'lon': data_coord['geometry']['coordinates'][1]
         }) for data_coord in data_json['features']
     ]
     df = pd.concat(data)
