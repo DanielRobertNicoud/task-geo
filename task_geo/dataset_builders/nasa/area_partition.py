@@ -53,10 +53,10 @@ def area_partition(df_loc):
             for i in range(k):
                 cx, cy = cluster_centers[i, :]
                 r = cluster_radii[i]
-                bboxes[i] = [0.5*np.floor(2*(cx - r)),
-                             0.5*np.floor(2*(cy - r)),
-                             0.5*np.ceil(2*(cx + r)),
-                             0.5*np.ceil(2*(cy + r))]
+                bboxes[i] = [0.5 * np.floor(2 * (cx - r)),
+                             0.5 * np.floor(2 * (cy - r)),
+                             0.5 * np.ceil(2 * (cx + r)),
+                             0.5 * np.ceil(2 * (cy + r))]
                 # widen slightly bboxes with zero area
                 if bboxes[i, 0] == bboxes[i, 2]:
                     bboxes[i, 0] -= 0.5
