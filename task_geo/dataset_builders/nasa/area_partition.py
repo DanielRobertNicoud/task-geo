@@ -1,6 +1,6 @@
-import numpy as np
-from numpy.linalg import norm
 from sklearn.cluster import KMeans
+from numpy.linalg import norm
+import numpy as np
 
 
 def area_partition(df_loc):
