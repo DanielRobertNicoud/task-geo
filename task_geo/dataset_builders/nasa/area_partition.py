@@ -1,15 +1,15 @@
 import numpy as np
 from numpy.linalg import norm
-import pandas as pd
 from sklearn.cluster import KMeans
+
 
 def area_partition(df_loc):
     """
     Find a small number of small bboxes covering all the locations.
-    
+
     Using k-means repeatedly, we find a small number of boxes of side at most
     10 covering all the given geolocations.
-    
+
     Notes:
         - Does not consider -180 as close to 180. This can lead to suboptimal
         solutions (but nothing too bad).
@@ -36,7 +36,7 @@ def area_partition(df_loc):
     k = 0
     while True:
         k += 1
-        kmeans = KMeans(n_clusters = k).fit(unique_locations)
+        kmeans = KMeans(n_clusters=k).fit(unique_locations)
 
         cluster_centers = kmeans.cluster_centers_
         labels = kmeans.labels_
