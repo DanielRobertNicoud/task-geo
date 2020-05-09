@@ -8,7 +8,7 @@ def area_partition(df_loc):
     Find a small number of small bboxes covering all the locations.
 
     Using k-means repeatedly, we find a small number of boxes of side at most
-    10 covering all the given geolocations.
+    4.5 covering all the given geolocations.
 
     Notes:
         - Does not consider -180 as close to 180. This can lead to suboptimal
@@ -16,6 +16,7 @@ def area_partition(df_loc):
         - The fit is doen with the Euclidean distance, not with the
         L-infinity metric (which would fit squares). This leads to slightly
         suboptimal solutions.
+        - 5x5 boxes are still too big for the API
 
     Parameters
     ----------
@@ -45,23 +46,25 @@ def area_partition(df_loc):
             cluster_radii[i] = max([norm(el - cluster_centers[i])
                                     for el in unique_locations[labels == i, :]]
                                    )
-        max_radius = cluster_radii.max()
 
-        # if the radius is small enough, create bboxes and return
-        if max_radius <= 5:
-            bboxes = np.empty((k, 4))
-            for i in range(k):
-                cx, cy = cluster_centers[i, :]
-                r = cluster_radii[i]
-                bboxes[i] = [0.5 * np.floor(2 * (cx - r)),
-                             0.5 * np.floor(2 * (cy - r)),
-                             0.5 * np.ceil(2 * (cx + r)),
-                             0.5 * np.ceil(2 * (cy + r))]
-                # widen slightly bboxes with zero area
-                if bboxes[i, 0] == bboxes[i, 2]:
-                    bboxes[i, 0] -= 0.5
-                    bboxes[i, 2] += 0.5
-                if bboxes[i, 1] == bboxes[i, 3]:
-                    bboxes[i, 1] -= 0.5
-                    bboxes[i, 3] += 0.5
+        # create bboxes
+        bboxes = np.empty((k, 4))
+        for i in range(k):
+            cx, cy = cluster_centers[i, :]
+            r = cluster_radii[i]
+            bboxes[i] = [0.5 * np.floor(2 * (cx - r)),
+                         0.5 * np.floor(2 * (cy - r)),
+                         0.5 * np.ceil(2 * (cx + r)),
+                         0.5 * np.ceil(2 * (cy + r))]
+            # widen slightly bboxes with zero area
+            if bboxes[i, 0] == bboxes[i, 2]:
+                bboxes[i, 0] -= 0.5
+                bboxes[i, 2] += 0.5
+            if bboxes[i, 1] == bboxes[i, 3]:
+                bboxes[i, 1] -= 0.5
+                bboxes[i, 3] += 0.5
+
+        # if max side smaller than 5, then return
+        max_side = (bboxes[:, [2, 3]] - bboxes[:, [0, 1]]).max()
+        if max_side < 5:
             return bboxes
