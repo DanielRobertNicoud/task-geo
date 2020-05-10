@@ -19,7 +19,7 @@ def area_partition(df_loc):
 
     # location points
     unique_locations = df_loc[['lat', 'lon']].drop_duplicates().dropna()
-    
+
     # create new columns with top left corner of small bbox containing the
     # location
     unique_locations['bottom_left_lat'] = \
@@ -30,10 +30,10 @@ def area_partition(df_loc):
         unique_locations['bottom_left_lat'] + 4.5
     unique_locations['top_right_lon'] = \
         unique_locations['bottom_left_lon'] + 4.5
-    
+
     bboxes = unique_locations[['bottom_left_lat',
                                'bottom_left_lon',
                                'top_right_lat',
                                'top_right_lon']]
-    
+
     return bboxes.drop_duplicates().values

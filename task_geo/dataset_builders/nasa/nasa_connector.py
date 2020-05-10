@@ -113,15 +113,15 @@ def match_grid_point(locations, df_data):
     pd.DataFrame
         Output dataset.
 
-    """    
+    """
     data = []
     for row in locations.itertuples():
         lat = 0.5 * round(2 * (row.lat - 0.25)) + 0.25
         lon = 0.5 * round(2 * (row.lon - 0.25)) + 0.25
-        df_loc = df_data[(df_data.lat==lat) & (df_data.lon==lon)].copy()
+        df_loc = df_data[(df_data.lat == lat) & (df_data.lon == lon)].copy()
         df_loc.lat = row.lat
         df_loc.lon = row.lon
-        
+
         data.append(df_loc)
     return pd.concat(data).reset_index(drop=True, inplace=False)
 
