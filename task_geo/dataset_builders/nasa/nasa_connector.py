@@ -81,6 +81,7 @@ def nasa_data_area(bbox, str_start_date, str_end_date, parms_list):
         f"{temporal_average}&{output_format}&"
         f"{user_community}&{user}"
     )
+    print(bbox)
 
     response = requests.get(url).json()
     data_json = requests.get(response['outputs']['json']).json()

@@ -1,22 +1,9 @@
 import numpy as np
-from numpy.linalg import norm
-from sklearn.cluster import KMeans
 
 
 def area_partition(df_loc):
     """
     Find a small number of small bboxes covering all the locations.
-
-    Using k-means repeatedly, we find a small number of boxes of side at most
-    4.5 covering all the given geolocations.
-
-    Notes:
-        - Does not consider -180 as close to 180. This can lead to suboptimal
-        solutions (but nothing too bad).
-        - The fit is doen with the Euclidean distance, not with the
-        L-infinity metric (which would fit squares). This leads to slightly
-        suboptimal solutions.
-        - 5x5 boxes are still too big for the API
 
     Parameters
     ----------
@@ -30,41 +17,23 @@ def area_partition(df_loc):
 
     """
 
-    # points to cluster
-    unique_locations = df_loc[['lat', 'lon']].drop_duplicates().dropna().values
-
-    # do k-means with increasing k until the maximal radius is no bigger than 5
-    k = 0
-    while True:
-        k += 1
-        kmeans = KMeans(n_clusters=k).fit(unique_locations)
-
-        cluster_centers = kmeans.cluster_centers_
-        labels = kmeans.labels_
-        cluster_radii = np.empty(k)
-        for i in range(k):
-            cluster_radii[i] = max([norm(el - cluster_centers[i])
-                                    for el in unique_locations[labels == i, :]]
-                                   )
-
-        # create bboxes
-        bboxes = np.empty((k, 4))
-        for i in range(k):
-            cx, cy = cluster_centers[i, :]
-            r = cluster_radii[i]
-            bboxes[i] = [0.5 * np.floor(2 * (cx - r)),
-                         0.5 * np.floor(2 * (cy - r)),
-                         0.5 * np.ceil(2 * (cx + r)),
-                         0.5 * np.ceil(2 * (cy + r))]
-            # widen slightly bboxes with zero area
-            if bboxes[i, 0] == bboxes[i, 2]:
-                bboxes[i, 0] -= 0.5
-                bboxes[i, 2] += 0.5
-            if bboxes[i, 1] == bboxes[i, 3]:
-                bboxes[i, 1] -= 0.5
-                bboxes[i, 3] += 0.5
-
-        # if max side smaller than 5, then return
-        max_side = (bboxes[:, [2, 3]] - bboxes[:, [0, 1]]).max()
-        if max_side < 5:
-            return bboxes
+    # location points
+    unique_locations = df_loc[['lat', 'lon']].drop_duplicates().dropna()
+    
+    # create new columns with top left corner of small bbox containing the
+    # location
+    unique_locations['bottom_left_lat'] = \
+        np.floor(unique_locations.lat / 4.5) * 4.5
+    unique_locations['bottom_left_lon'] = \
+        np.floor(unique_locations.lon / 4.5) * 4.5
+    unique_locations['top_right_lat'] = \
+        unique_locations['bottom_left_lat'] + 4.5
+    unique_locations['top_right_lon'] = \
+        unique_locations['bottom_left_lon'] + 4.5
+    
+    bboxes = unique_locations[['bottom_left_lat',
+                               'bottom_left_lon',
+                               'top_right_lat',
+                               'top_right_lon']]
+    
+    return bboxes.drop_duplicates().values
